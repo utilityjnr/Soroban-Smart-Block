@@ -1,5 +1,18 @@
 const BASE = "/api";
 
+export interface StorageWrite {
+  tier: "instance" | "persistent" | "temporary";
+  contractId: string;
+  key: string;
+  changeType: "created" | "updated";
+}
+
+export interface StorageTiers {
+  instance: StorageWrite[];
+  persistent: StorageWrite[];
+  temporary: StorageWrite[];
+}
+
 export interface DecodedEvent {
   seq: number;
   contract_id: string;
@@ -12,6 +25,12 @@ export interface DecodedEvent {
   cpu_instructions?: number;
   mem_bytes?: number;
   fee_charged?: number;
+  // Issue #50: state-bloat risk
+  is_high_bloat_risk?: boolean;
+  // Issue #51: upgrade lineage
+  upgrade_info?: { type: "upgrade"; oldHash: string; newHash: string };
+  // Issue #52: storage tier breakdown
+  storage_tiers?: StorageTiers;
 }
 
 export interface ContractMeta {
