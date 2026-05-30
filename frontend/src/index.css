@@ -56,3 +56,5 @@ button:hover { opacity: 0.85; }
 }
 .badge.green { background: #1a3a22; color: var(--green); }
 .badge.yellow { background: #3a2e0a; color: var(--yellow); }
+.badge.wrap { background: #0d2a3a; color: #58c4f5; }
+.badge.unwrap { background: #2a1a0d; color: #e8a44a; }

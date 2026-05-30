@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "../api";
 import EventTable from "../components/EventTable";
 
-const FUNCTIONS = ["", "swap", "transfer", "mint", "burn", "stake", "unstake"];
+const FUNCTIONS = ["", "swap", "transfer", "mint", "burn", "stake", "unstake", "wrap_native", "unwrap_native"];
 
 export default function Home() {
   const [fnFilter, setFnFilter] = useState("");

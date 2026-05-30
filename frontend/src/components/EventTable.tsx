@@ -5,6 +5,26 @@ interface Props {
   events: DecodedEvent[];
 }
 
+function FunctionBadge({ fn }: { fn: string }) {
+  if (fn === "wrap_native") {
+    return (
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+        <span className="badge wrap">Wrap Native Asset</span>
+        <span style={{ fontSize: 11, color: "var(--muted)" }}>Classic XLM → Soroban</span>
+      </span>
+    );
+  }
+  if (fn === "unwrap_native") {
+    return (
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+        <span className="badge unwrap">Unwrap Native Asset</span>
+        <span style={{ fontSize: 11, color: "var(--muted)" }}>Soroban → Classic XLM</span>
+      </span>
+    );
+  }
+  return <span className="badge">{fn}</span>;
+}
+
 export default function EventTable({ events }: Props) {
   if (!events.length) return <p style={{ color: "var(--muted)" }}>No events found.</p>;
 
@@ -27,7 +47,7 @@ export default function EventTable({ events }: Props) {
               </td>
               <td style={td}>{ev.ledger.toLocaleString()}</td>
               <td style={td}>
-                <span className="badge">{ev.function}</span>
+                <FunctionBadge fn={ev.function} />
               </td>
               <td style={{ ...td, maxWidth: 480, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {ev.description}

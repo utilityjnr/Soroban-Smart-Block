@@ -42,7 +42,7 @@ function Row({ label, value, highlight, badge, mono }: {
     <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
       <span style={{ color: "var(--muted)", minWidth: 100 }}>{label}</span>
       {badge
-        ? <span className="badge green">{value}</span>
+        ? <FunctionBadge fn={String(value)} />
         : <span style={{
             fontWeight: highlight ? 600 : 400,
             fontFamily: mono ? "monospace" : undefined,
@@ -52,4 +52,24 @@ function Row({ label, value, highlight, badge, mono }: {
       }
     </div>
   );
+}
+
+function FunctionBadge({ fn }: { fn: string }) {
+  if (fn === "wrap_native") {
+    return (
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+        <span className="badge wrap">Wrap Native Asset</span>
+        <span style={{ fontSize: 12, color: "var(--muted)" }}>Classic XLM → Soroban</span>
+      </span>
+    );
+  }
+  if (fn === "unwrap_native") {
+    return (
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+        <span className="badge unwrap">Unwrap Native Asset</span>
+        <span style={{ fontSize: 12, color: "var(--muted)" }}>Soroban → Classic XLM</span>
+      </span>
+    );
+  }
+  return <span className="badge green">{fn}</span>;
 }
