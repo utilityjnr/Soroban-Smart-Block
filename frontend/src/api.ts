@@ -33,11 +33,25 @@ export interface DecodedEvent {
   storage_tiers?: StorageTiers;
 }
 
+export interface SourceFile {
+  path: string;
+  content: string;
+}
+
+export interface MigrationStatus {
+  pending: boolean;
+  upgradedAtLedger: number | null;
+  migratedAtLedger: number | null;
+}
+
 export interface ContractMeta {
   id: string;
   name: string;
   description: string;
   functions: { name: string; description: string }[];
+  source?: string;
+  source_file?: string;
+  source_files?: SourceFile[];
 }
 
 // Issue #38: paginated contract transaction response
@@ -82,7 +96,8 @@ export const api = {
     return get<DecodedEvent[]>(`/events?${q}`);
   },
   event:    (seq: number)     => get<DecodedEvent>(`/events/${seq}`),
-  contract: (id: string)      => get<ContractMeta>(`/contracts/${id}`),
+  contract:        (id: string) => get<ContractMeta>(`/contracts/${id}`),
+  migrationStatus: (id: string) => get<MigrationStatus>(`/contracts/${id}/migration-status`),
   wallet:   (address: string) => get<DecodedEvent[]>(`/wallet/${address}`),
   roles:    (id: string)      => get<PrivilegedRole[]>(`/contracts/${id}/roles`),
 
