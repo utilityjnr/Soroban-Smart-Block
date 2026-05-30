@@ -2,6 +2,8 @@ import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api";
 import EventTable from "../components/EventTable";
+import ReadContract from "../components/ReadContract";
+import WriteContract from "../components/WriteContract";
 
 export default function ContractPage() {
   const { id = "" } = useParams();
@@ -42,6 +44,13 @@ export default function ContractPage() {
           </div>
         )}
       </div>
+
+      {meta.functions.length > 0 && (
+        <>
+          <ReadContract functions={meta.functions as any} contractId={id} />
+          <WriteContract functions={meta.functions as any} contractId={id} />
+        </>
+      )}
 
       <h3>Recent Events</h3>
       <div className="card">

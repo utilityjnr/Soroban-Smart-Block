@@ -4,6 +4,7 @@ import Home from "./pages/Home";
 import ContractPage from "./pages/ContractPage";
 import WalletPage from "./pages/WalletPage";
 import EventPage from "./pages/EventPage";
+import XdrInspector from "./pages/XdrInspector";
 
 export default function App() {
   return (
@@ -15,6 +16,7 @@ export default function App() {
           <Route path="/contract/:id" element={<ContractPage />} />
           <Route path="/wallet/:address" element={<WalletPage />} />
           <Route path="/event/:seq" element={<EventPage />} />
+          <Route path="/xdr" element={<XdrInspector />} />
         </Routes>
       </main>
     </>
