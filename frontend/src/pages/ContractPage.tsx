@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api";
 import type { BurnAlert } from "../api";
@@ -47,7 +47,7 @@ const DEMO_TREE: InvocationNode = {
   ],
 };
 
-type Tab = "overview" | "source" | "simulate" | "flow" | "roles";
+type Tab = "overview" | "source" | "simulate" | "flow" | "roles" | "networks" | "graph";
 
 export default function ContractPage() {
   const { id = "" } = useParams();
@@ -81,11 +81,13 @@ export default function ContractPage() {
   if (!meta) return <p>Contract not found.</p>;
 
   const tabs: { key: Tab; label: string }[] = [
-    { key: "overview", label: "Overview" },
-    { key: "source",   label: "Source Code" },
-    { key: "simulate", label: "Simulate" },
-    { key: "flow",     label: "Invocation Flow" },
-    { key: "roles",    label: "Privileged Roles" },
+    { key: "overview",  label: "Overview" },
+    { key: "source",    label: "Source Code" },
+    { key: "simulate",  label: "Simulate" },
+    { key: "flow",      label: "Invocation Flow" },
+    { key: "roles",     label: "Privileged Roles" },
+    { key: "networks",  label: "Networks" },
+    { key: "graph",     label: "Address Graph" },
   ];
 
   return (
@@ -103,20 +105,37 @@ export default function ContractPage() {
             <p style={{ color: "var(--muted)", marginBottom: 12 }}>{meta.description}</p>
             <code style={{ fontSize: 12, color: "var(--muted)", wordBreak: "break-all" }}>{id}</code>
           </div>
-          <button
-            onClick={downloadAbi}
-            style={{
-              padding: "8px 16px",
-              background: "var(--accent)",
-              color: "#fff",
-              border: "none",
-              borderRadius: 4,
-              cursor: "pointer",
-              fontSize: 13,
-            }}
-          >
-            Download ABI
-          </button>
+          <div style={{ display: "flex", gap: 8 }}>
+            <Link
+              to={`/contract/${id}/workspace`}
+              style={{
+                padding: "8px 16px",
+                background: "var(--surface, #1a1a2e)",
+                color: "var(--accent)",
+                border: "1px solid var(--accent)",
+                borderRadius: 4,
+                cursor: "pointer",
+                fontSize: 13,
+                textDecoration: "none",
+              }}
+            >
+              🛠 Dev Workspace
+            </Link>
+            <button
+              onClick={downloadAbi}
+              style={{
+                padding: "8px 16px",
+                background: "var(--accent)",
+                color: "#fff",
+                border: "none",
+                borderRadius: 4,
+                cursor: "pointer",
+                fontSize: 13,
+              }}
+            >
+              Download ABI
+            </button>
+          </div>
         </div>
 
       {/* Tab bar */}
@@ -239,6 +258,12 @@ export default function ContractPage() {
 
       {/* Tab: Privileged Roles */}
       {tab === "roles" && <PrivilegedRoles contractId={id} />}
+
+      {/* Tab: Network Comparison — Issue #124 */}
+      {tab === "networks" && <NetworkComparison contractId={id} />}
+
+      {/* Tab: Address Connection Graph — Issue #126 */}
+      {tab === "graph" && <AddressConnectionGraph contractId={id} />}
     </div>
   );
 }
