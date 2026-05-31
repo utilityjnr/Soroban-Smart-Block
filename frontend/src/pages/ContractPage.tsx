@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api";
 import type { BurnAlert } from "../api";
@@ -10,9 +10,7 @@ import SourceFileTree from "../components/SourceFileTree";
 import SimulateButton from "../components/SimulateButton";
 import InvocationFlowChart, { type InvocationNode } from "../components/InvocationFlowChart";
 import PrivilegedRoles from "../components/PrivilegedRoles";
-import AbiUploadZone from "../components/AbiUploadZone";
-import LocalAbiEventTable from "../components/LocalAbiEventTable";
-import { useLocalAbi } from "../hooks/useLocalAbi";
+import SdkSnippet from "../components/SdkSnippet";
 
 // Demo source shown when no verified source is uploaded
 const DEMO_SOURCE = `// Verified source not yet uploaded for this contract.
@@ -49,12 +47,13 @@ const DEMO_TREE: InvocationNode = {
   ],
 };
 
-type Tab = "overview" | "source" | "simulate" | "flow" | "roles";
+type Tab = "overview" | "source" | "simulate" | "flow" | "roles" | "networks" | "graph";
 
 export default function ContractPage() {
   const { id = "" } = useParams();
   const [tab, setTab] = useState<Tab>("overview");
   const [selectedFn, setSelectedFn] = useState("");
+  const [snippetFn, setSnippetFn] = useState<string | null>(null);
 
   // ── Local ABI (session-only, never sent to server) ──────────────────────────
   const { localAbi, loadAbi, clearAbi, parseError } = useLocalAbi(id);
@@ -68,6 +67,12 @@ export default function ContractPage() {
   const { data: events = [], isLoading: evLoading } = useQuery({
     queryKey: ["events", id],
     queryFn: () => api.events({ contract: id }),
+    enabled: !!id,
+  });
+
+  const { data: burnAlerts = [] } = useQuery({
+    queryKey: ["burn-alerts", id],
+    queryFn: () => api.burnAlerts(id),
     enabled: !!id,
   });
 
@@ -132,11 +137,13 @@ export default function ContractPage() {
   }
 
   const tabs: { key: Tab; label: string }[] = [
-    { key: "overview", label: "Overview" },
-    { key: "source",   label: "Source Code" },
-    { key: "simulate", label: "Simulate" },
-    { key: "flow",     label: "Invocation Flow" },
-    { key: "roles",    label: "Privileged Roles" },
+    { key: "overview",  label: "Overview" },
+    { key: "source",    label: "Source Code" },
+    { key: "simulate",  label: "Simulate" },
+    { key: "flow",      label: "Invocation Flow" },
+    { key: "roles",     label: "Privileged Roles" },
+    { key: "networks",  label: "Networks" },
+    { key: "graph",     label: "Address Graph" },
   ];
 
   return (
@@ -154,41 +161,78 @@ export default function ContractPage() {
             <p style={{ color: "var(--muted)", marginBottom: 12 }}>{meta.description}</p>
             <code style={{ fontSize: 12, color: "var(--muted)", wordBreak: "break-all" }}>{id}</code>
           </div>
-          <button
-            onClick={downloadAbi}
-            style={{
-              padding: "8px 16px",
-              background: "var(--accent)",
-              color: "#fff",
-              border: "none",
-              borderRadius: 4,
-              cursor: "pointer",
-              fontSize: 13,
-            }}
-          >
-            Download ABI
-          </button>
-        </div>
-
-        {/* Tab bar */}
-        <div style={{ display: "flex", gap: 4, borderBottom: "1px solid var(--border)", paddingBottom: 0 }}>
-          {tabs.map(t => (
-            <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
+          <div style={{ display: "flex", gap: 8 }}>
+            <Link
+              to={`/contract/${id}/workspace`}
               style={{
-                background: "none",
-                color: tab === t.key ? "var(--accent)" : "var(--muted)",
-                borderBottom: tab === t.key ? "2px solid var(--accent)" : "2px solid transparent",
-                borderRadius: 0,
                 padding: "8px 16px",
-                fontWeight: tab === t.key ? 700 : 400,
+                background: "var(--surface, #1a1a2e)",
+                color: "var(--accent)",
+                border: "1px solid var(--accent)",
+                borderRadius: 4,
+                cursor: "pointer",
+                fontSize: 13,
+                textDecoration: "none",
               }}
             >
-              {t.label}
+              🛠 Dev Workspace
+            </Link>
+            <button
+              onClick={downloadAbi}
+              style={{
+                padding: "8px 16px",
+                background: "var(--accent)",
+                color: "#fff",
+                border: "none",
+                borderRadius: 4,
+                cursor: "pointer",
+                fontSize: 13,
+              }}
+            >
+              Download ABI
             </button>
-          ))}
+          </div>
         </div>
+
+        {meta.dependency_advisory?.outdated && (
+          <div className="card" style={{ borderLeft: "4px solid #f97316", background: "rgba(249, 115, 22, 0.08)", color: "#78350f", marginTop: 12 }}>
+            <strong>{meta.dependency_advisory.summary}</strong>
+            <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center" }}>
+              {meta.dependency_advisory.packages.map(pkg => (
+                <div key={pkg.name} style={{ minWidth: 180 }}>
+                  <div style={{ fontSize: 13 }}>
+                    <span style={{ fontWeight: 700 }}>{pkg.name}</span>
+                    <span style={{ marginLeft: 6 }}>
+                      {pkg.currentVersion} → {pkg.latestVersion}
+                    </span>
+                  </div>
+                  <a href={pkg.upgradeUrl} target="_blank" rel="noreferrer" style={{ color: "#b45309", fontSize: 13 }}>
+                    View upgrade guide
+                  </a>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+      {/* Tab bar */}
+      <div style={{ display: "flex", gap: 4, borderBottom: "1px solid var(--border)", paddingBottom: 0 }}>
+        {tabs.map(t => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            style={{
+              background: "none",
+              color: tab === t.key ? "var(--accent)" : "var(--muted)",
+              borderBottom: tab === t.key ? "2px solid var(--accent)" : "2px solid transparent",
+              borderRadius: 0,
+              padding: "8px 16px",
+              fontWeight: tab === t.key ? 700 : 400,
+            }}
+          >
+            {t.label}
+          </button>
+        ))}
       </div>
 
       {/* Tab: Overview */}
@@ -276,11 +320,31 @@ export default function ContractPage() {
           {meta.functions.length > 0 && (
             <div className="card">
               <h3 style={{ marginBottom: 8, fontSize: 14 }}>Functions</h3>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {meta.functions.map(f => (
                   <div key={f.name} className="card" style={{ padding: "8px 12px" }}>
-                    <span className="badge">{f.name}</span>
-                    <span style={{ marginLeft: 8, color: "var(--muted)" }}>{f.description}</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span className="badge">{f.name}</span>
+                      <span style={{ color: "var(--muted)", flex: 1 }}>{f.description}</span>
+                      {/* Issue #120: SDK snippet copy button */}
+                      <button
+                        onClick={() => setSnippetFn(snippetFn === f.name ? null : f.name)}
+                        style={{
+                          padding: "3px 10px",
+                          fontSize: 12,
+                          background: snippetFn === f.name ? "var(--accent, #7c3aed)" : "var(--bg2, #1e1e2e)",
+                          color: snippetFn === f.name ? "#fff" : "var(--muted)",
+                          border: "1px solid var(--border, #333)",
+                          borderRadius: 4,
+                          cursor: "pointer",
+                        }}
+                      >
+                        {"</>"}  SDK
+                      </button>
+                    </div>
+                    {snippetFn === f.name && (
+                      <SdkSnippet contractId={id} fnName={f.name} />
+                    )}
                   </div>
                 ))}
               </div>
@@ -343,6 +407,12 @@ export default function ContractPage() {
 
       {/* Tab: Privileged Roles */}
       {tab === "roles" && <PrivilegedRoles contractId={id} />}
+
+      {/* Tab: Network Comparison — Issue #124 */}
+      {tab === "networks" && <NetworkComparison contractId={id} />}
+
+      {/* Tab: Address Connection Graph — Issue #126 */}
+      {tab === "graph" && <AddressConnectionGraph contractId={id} />}
     </div>
   );
 }

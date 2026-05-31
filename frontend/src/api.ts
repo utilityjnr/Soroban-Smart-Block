@@ -53,6 +53,19 @@ export interface MigrationStatus {
   migratedAtLedger: number | null;
 }
 
+export interface DependencyAdvisoryPackage {
+  name: string;
+  currentVersion: string;
+  latestVersion: string;
+  upgradeUrl: string;
+}
+
+export interface DependencyAdvisory {
+  outdated: boolean;
+  summary: string;
+  packages: DependencyAdvisoryPackage[];
+}
+
 export interface ContractMeta {
   id: string;
   name: string;
@@ -61,6 +74,7 @@ export interface ContractMeta {
   source?: string;
   source_file?: string;
   source_files?: SourceFile[];
+  dependency_advisory?: DependencyAdvisory | null;
 }
 
 export interface BurnAlert {
@@ -103,6 +117,25 @@ export interface PrivilegedRole {
   updated_at: string;
 }
 
+// Issue #117: sub-invocation record
+export interface SubInvocation {
+  id: number;
+  parent_tx_hash: string;
+  depth: number;
+  contract_id: string;
+  function: string;
+  args: unknown[] | null;
+  ledger: number;
+}
+
+// Issue #118: transaction status
+export interface TxStatusResponse {
+  tx_hash: string;
+  status: "pending" | "success" | "failed";
+  ledger: number | null;
+  error?: string | null;
+}
+
 export const api = {
   events: (params: { contract?: string; fn?: string; page?: number; type?: string }) => {
     const q = new URLSearchParams();
@@ -114,9 +147,21 @@ export const api = {
   },
   event:    (seq: number)     => get<DecodedEvent>(`/events/${seq}`),
   contract:        (id: string) => get<ContractMeta>(`/contracts/${id}`),
+  burnAlerts:      (contract: string) => get<BurnAlert[]>(`/burn-alerts?contract=${contract}`),
   migrationStatus: (id: string) => get<MigrationStatus>(`/contracts/${id}/migration-status`),
   wallet:   (address: string) => get<DecodedEvent[]>(`/wallet/${address}`),
   roles:    (id: string)      => get<PrivilegedRole[]>(`/contracts/${id}/roles`),
+  networkComparison: (id: string) => get<NetworkComparisonResult>(`/contracts/${id}/network-comparison`),
+  addressGraph:      (id: string) => get<AddressGraphData>(`/contracts/${id}/address-graph`),
+
+  // Issue #117: sub-invocations for a transaction
+  subInvocations: (txHash: string) => get<SubInvocation[]>(`/transactions/${txHash}/sub-invocations`),
+  // Events where contract appears directly OR as sub-invocation
+  eventsDeep: (contractId: string, page = 1) =>
+    get<DecodedEvent[]>(`/v1/contracts/${contractId}/events-deep?page=${page}`),
+
+  // Issue #118: transaction status (polling fallback; SSE via useTxStatus hook)
+  txStatus: (txHash: string) => get<TxStatusResponse>(`/transactions/${txHash}/status`),
 
   downloadAbi: async (id: string) => {
     const res = await fetch(`${BASE}/contracts/${id}/abi`);

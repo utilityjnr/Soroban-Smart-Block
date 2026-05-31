@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "../api";
+import StructuredValue, { buildTypeIndex, type TypeIndex } from "./StructuredValue";
 
 interface Param {
   name: string;
@@ -38,9 +41,26 @@ export default function ReadContract({ functions, contractId }: Props) {
 
   const [selected, setSelected] = useState<string>(readFns[0]?.name ?? "");
   const [args, setArgs] = useState<Record<string, string>>({});
-  const [result, setResult] = useState<string | null>(null);
+  const [result, setResult] = useState<unknown>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Fetch the full spec (functions + custom types) for this contract
+  const { data: fullSpec } = useQuery({
+    queryKey: ["spec-full", contractId],
+    queryFn: () => api.specFull(contractId),
+    enabled: !!contractId,
+    // Don't block the UI if the spec isn't available
+    retry: false,
+  });
+
+  const typeIndex: TypeIndex = fullSpec?.types
+    ? buildTypeIndex(fullSpec.types)
+    : new Map();
+
+  // Find the return type of the selected function from the full spec
+  const specFn = fullSpec?.functions.find(f => f.name === selected);
+  const returnType: string | null = specFn?.outputs?.[0] ?? null;
 
   const fn = readFns.find(f => f.name === selected);
 
@@ -61,7 +81,7 @@ export default function ReadContract({ functions, contractId }: Props) {
       const res = await fetch(`/api/read?${params}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Call failed");
-      setResult(JSON.stringify(data.result, null, 2));
+      setResult(data.result);
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -113,17 +133,33 @@ export default function ReadContract({ functions, contractId }: Props) {
       </button>
 
       {error && <p style={{ color: "#f85149", fontSize: 13 }}>{error}</p>}
+
       {result !== null && (
-        <pre style={{
-          background: "var(--bg)",
-          border: "1px solid var(--border)",
-          borderRadius: 6,
-          padding: 12,
-          fontSize: 12,
-          overflowX: "auto",
-          whiteSpace: "pre-wrap",
-          wordBreak: "break-all",
-        }}>{result}</pre>
+        <div
+          style={{
+            background: "var(--bg)",
+            border: "1px solid var(--border)",
+            borderRadius: 6,
+            padding: 12,
+            fontSize: 12,
+            overflowX: "auto",
+          }}
+        >
+          {/* Use StructuredValue when we have type info, otherwise fall back to JSON */}
+          {returnType && typeIndex.has(returnType) ? (
+            <StructuredValue
+              value={result}
+              typeHint={returnType}
+              typeIndex={typeIndex}
+              label={returnType}
+            />
+          ) : (
+            <pre style={{ margin: 0, whiteSpace: "pre-wrap", wordBreak: "break-all" }}>
+              {JSON.stringify(result, (_k, v) =>
+                typeof v === "bigint" ? v.toString() : v, 2)}
+            </pre>
+          )}
+        </div>
       )}
     </div>
   );

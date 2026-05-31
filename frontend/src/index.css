@@ -11,7 +11,18 @@
   --yellow: #d29922;
 }
 
-body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; font-size: 14px; }
+[data-theme="light"] {
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --border: #d1d5db;
+  --accent: #2563eb;
+  --text: #111827;
+  --muted: #6b7280;
+  --green: #047857;
+  --yellow: #d97706;
+}
+
+body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; font-size: 14px; transition: background 200ms ease, color 200ms ease; }
 
 a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
@@ -24,6 +35,7 @@ input, select {
   padding: 6px 10px;
   font-size: 14px;
   outline: none;
+  transition: background 200ms ease, border-color 200ms ease, color 200ms ease;
 }
 input:focus, select:focus { border-color: var(--accent); }
 
@@ -35,6 +47,7 @@ button {
   padding: 6px 14px;
   font-weight: 600;
   cursor: pointer;
+  transition: background 200ms ease, color 200ms ease, opacity 200ms ease;
 }
 button:hover { opacity: 0.85; }
 
@@ -43,6 +56,7 @@ button:hover { opacity: 0.85; }
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 16px;
+  transition: background 200ms ease, border-color 200ms ease, color 200ms ease;
 }
 
 .badge {
@@ -53,6 +67,7 @@ button:hover { opacity: 0.85; }
   font-weight: 600;
   background: var(--border);
   color: var(--text);
+  transition: background 200ms ease, color 200ms ease;
 }
 .badge.green { background: #1a3a22; color: var(--green); }
 .badge.yellow { background: #3a2e0a; color: var(--yellow); }
