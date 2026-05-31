@@ -28,7 +28,10 @@ export default function Nav() {
         ⬡ Soroban Explorer
       </Link>
       <Link to="/xdr" style={{ fontSize: 13, whiteSpace: "nowrap", color: "var(--muted)" }}>
-        XDR Inspector
+        XDR Workbench
+      </Link>
+      <Link to="/storage-layout" style={{ fontSize: 13, whiteSpace: "nowrap", color: "var(--muted)" }}>
+        Storage Layout
       </Link>
       <Link to="/rpc-metrics" style={{ fontSize: 13, whiteSpace: "nowrap", color: "var(--muted)" }}>
         RPC Metrics
