@@ -223,74 +223,13 @@ function ValueNode({ name, value, isRoot = false }: ValueNodeProps) {
         </div>
       );
     }
-
-    // Issue #136 — Vec<Vec<T>>: render as a 2-D grid matrix when every element
-    // is itself a non-empty array (and none of those inner arrays contain further arrays).
-    const isMatrix =
-      value.length > 0 &&
-      value.every(
-        row =>
-          Array.isArray(row) &&
-          (row as unknown[]).length > 0 &&
-          !(row as unknown[]).some(cell => Array.isArray(cell))
-      );
-
-    if (isMatrix) {
-      const matrix = value as unknown[][];
+    // Render fixed-size tuples of primitives inline: [100, 250]
+    const allPrimitive = value.every(v => v !== null && typeof v !== "object");
+    if (allPrimitive) {
       return (
         <div>
-          <div style={{ color: "var(--muted, #888)", marginBottom: 6 }}>
-            {name}:{" "}
-            <span style={{ fontSize: "0.8em" }}>
-              [{matrix.length} × {matrix[0].length}]
-            </span>
-          </div>
-          <div style={{ overflowX: "auto" }}>
-            <table
-              style={{
-                borderCollapse: "collapse",
-                fontSize: "0.82em",
-                fontFamily: "monospace",
-                marginLeft: 16,
-              }}
-            >
-              <tbody>
-                {matrix.map((row, rowIdx) => (
-                  <tr key={rowIdx}>
-                    <td
-                      style={{
-                        padding: "2px 8px 2px 0",
-                        color: "var(--muted, #888)",
-                        userSelect: "none",
-                        textAlign: "right",
-                      }}
-                    >
-                      [{rowIdx}]
-                    </td>
-                    {row.map((cell, colIdx) => (
-                      <td
-                        key={colIdx}
-                        style={{
-                          padding: "2px 10px",
-                          border: "1px solid var(--border, #30363d)",
-                          color:
-                            typeof cell === "number" || typeof cell === "bigint"
-                              ? "#79c0ff"
-                              : typeof cell === "boolean"
-                              ? "#f0883e"
-                              : "var(--green, #3fb950)",
-                          textAlign: "right",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {typeof cell === "string" ? `"${cell}"` : String(cell)}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <span style={{ color: "var(--muted, #888)" }}>{name}:</span>{" "}
+          <span style={{ color: "#79c0ff" }}>[{value.join(", ")}]</span>
         </div>
       );
     }
